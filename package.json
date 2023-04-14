@@ -1,0 +1,34 @@
+{
+  "name": "devconnector",
+  "version": "2.0.0",
+  "description": "Social network for developers",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server",
+    "server": "nodemon server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/StanHekht/DevConnector.git"
+  },
+  "author": "Stan Hekht",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/StanHekht/DevConnector/issues"
+  },
+  "homepage": "https://github.com/StanHekht/DevConnector#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "config": "^3.3.9",
+    "express": "^4.18.2",
+    "express-validator": "^6.15.0",
+    "gravatar": "^1.8.2",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^7.0.3",
+    "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.1",
+    "nodemon": "^2.0.22"
+  }
+}

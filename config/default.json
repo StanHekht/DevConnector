@@ -1,3 +1,4 @@
 {
-  "mongoURI": "mongodb+srv://StanHekht:Gomel1401@devconnector.2dmw4e6.mongodb.net/test"
+  "mongoURI": "mongodb+srv://StanHekht:Gomel1401@devconnector.2dmw4e6.mongodb.net/test",
+  "jwtSecret": "mysecrettoken"
 }

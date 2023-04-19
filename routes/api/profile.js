@@ -4,10 +4,13 @@ const router = express.Router();
 const config = require('config');
 const auth = require('../../middleware/auth');
 const { check, validationResult } = require('express-validator');
+// bring in normalize to give us a proper url, regardless of what user entered
+const normalize = require('normalize-url');
 const checkObjectId = require('../../middleware/checkObjectId');
 
 const Profile = require('../../models/Profile');
 const User = require('../../models/User');
+const Post = require('../../models/Post');
 
 // @route   GET api/profile/me
 // @desc    Get current user's profile
@@ -64,7 +67,8 @@ router.post(
     const profileFields = {};
     profileFields.user = req.user.id;
     if (company) profileFields.company = company;
-    if (website) profileFields.website = website;
+    if (website)
+      profileFields.website = normalize(website, { forceHttps: true });
     if (location) profileFields.location = location;
     if (bio) profileFields.bio = bio;
     if (status) profileFields.status = status;
@@ -76,11 +80,23 @@ router.post(
     // Build social skills object
     profileFields.social = {};
 
-    if (youtube) profileFields.social.youtube = youtube;
-    if (twitter) profileFields.social.twitter = twitter;
-    if (facebook) profileFields.social.facebook = facebook;
-    if (linkedin) profileFields.social.linkedin = linkedin;
-    if (instagram) profileFields.social.instagram = instagram;
+    if (youtube) {
+      profileFields.social.youtube = normalize(youtube, { forceHttps: true });
+    }
+    if (twitter) {
+      profileFields.social.twitter = normalize(twitter, { forceHttps: true });
+    }
+    if (facebook) {
+      profileFields.social.facebook = normalize(facebook, { forceHttps: true });
+    }
+    if (linkedin) {
+      profileFields.social.linkedin = normalize(linkedin, { forceHttps: true });
+    }
+    if (instagram) {
+      profileFields.social.instagram = normalize(instagram, {
+        forceHttps: true,
+      });
+    }
 
     try {
       let profile = await Profile.findOne({
@@ -152,13 +168,14 @@ router.get(
 // @access   Private
 router.delete('/', auth, async (req, res) => {
   try {
-    // @todo - remove user's posts
-
+    // Remove user posts
     // Remove profile
-    await Profile.findOneAndRemove({ user: req.user.id });
-
     // Remove user
-    await User.findOneAndRemove({ _id: req.user.id });
+    await Promise.all([
+      Post.deleteMany({ user: req.user.id }),
+      Profile.findOneAndRemove({ user: req.user.id }),
+      User.findOneAndRemove({ _id: req.user.id }),
+    ]);
 
     res.json({ msg: 'User deleted' });
   } catch (error) {
@@ -198,6 +215,9 @@ router.put(
     try {
       const profile = await Profile.findOne({ user: req.user.id });
 
+      // Return 400 is there is no profile
+      if (!profile) return res.status(400).json({ msg: 'Profile not found' });
+
       profile.experience.unshift(newExp);
 
       await profile.save();
@@ -220,18 +240,18 @@ router.delete(
     try {
       const profile = await Profile.findOne({ user: req.user.id });
 
-      // Get remove index
-      const removeIndex = profile.experience
-        .map((item) => item.id)
-        .indexOf(req.params.exp_id);
+      // Return 400 is there is no profile
+      if (!profile) return res.status(400).json({ msg: 'Profile not found' });
 
-      profile.experience.splice(removeIndex, 1);
+      profile.experience = profile.experience.filter(
+        (exp) => exp._id.toString() !== req.params.exp_id
+      );
 
       await profile.save();
       res.json(profile);
     } catch (error) {
       console.error(error);
-      return res.status(500).json({ msg: 'Server error' });
+      res.status(500).json({ msg: 'Server error' });
     }
   }
 );
@@ -268,6 +288,9 @@ router.put(
     try {
       const profile = await Profile.findOne({ user: req.user.id });
 
+      // Return 400 is there is no profile
+      if (!profile) return res.status(400).json({ msg: 'Profile not found' });
+
       profile.education.unshift(newEdu);
 
       await profile.save();
@@ -282,24 +305,28 @@ router.put(
 // @route    DELETE api/profile/education/:edu_id
 // @desc     Delete education from profile
 // @access   Private
-router.delete('/education/:edu_id', auth, async (req, res) => {
-  try {
-    const profile = await Profile.findOne({ user: req.user.id });
+router.delete(
+  '/education/:edu_id',
+  auth,
+  checkObjectId('edu_id'),
+  async (req, res) => {
+    try {
+      const profile = await Profile.findOne({ user: req.user.id });
 
-    // Get remove index
-    const removeIndex = profile.education
-      .map((item) => item.id)
-      .indexOf(req.params.edu_id);
+      // Return 400 is there is no profile
+      if (!profile) return res.status(400).json({ msg: 'Profile not found' });
 
-    profile.education.splice(removeIndex, 1);
-
-    await profile.save();
-    res.json(profile);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ msg: 'Server error' });
+      profile.education = profile.education.filter(
+        (edu) => edu._id.toString() !== req.params.edu_id
+      );
+      await profile.save();
+      return res.json(profile);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ msg: 'Server error' });
+    }
   }
-});
+);
 
 // @route    GET api/profile/github/:username
 // @desc     Get user repos from Github

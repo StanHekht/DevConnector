@@ -139,12 +139,10 @@ router.put('/unlike/:id', auth, checkObjectId('id'), async (req, res) => {
       return res.status(400).json({ msg: 'Post has not yet been liked' });
     }
 
-    // Get remove index
-    const removeIndex = post.likes
-      .map((like) => like.user.toString())
-      .indexOf(req.user.id);
-
-    post.likes.splice(removeIndex, 1);
+    // Remove the like
+    post.likes = post.likes.filter(
+      ({ user }) => user.toString() !== req.user.id
+    );
 
     await post.save();
 
@@ -225,11 +223,9 @@ router.delete(
         return res.status(401).json({ msg: 'User not authorized' });
       }
 
-      const removeIndex = post.comments
-        .map((comment) => comment.user.toString())
-        .indexOf(req.user.id);
-
-      post.comments.splice(removeIndex, 1);
+      post.comments = post.comments.filter(
+        ({ id }) => id !== req.params.comment_id
+      );
 
       await post.save();
 

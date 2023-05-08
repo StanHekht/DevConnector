@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -15,8 +15,7 @@ const Dashboard = ({
 }) => {
   useEffect(() => {
     getCurrentProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [getCurrentProfile]);
 
   return (
     <section className='container'>

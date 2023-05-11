@@ -9,4 +9,4 @@ Express, NodeJS, MongoDB
 Deployed to Heroku.
 
 
-See this [Application](https://stanhekht-support-desk.herokuapp.com/) live!
+See this [Application](https://stanhekht-devconnector.herokuapp.com/) live!
